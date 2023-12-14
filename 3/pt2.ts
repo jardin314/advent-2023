@@ -76,7 +76,7 @@ async function main() {
       if (!!inputArray[index.x][index.y]) {
         const number: NumberGridInfo|undefined  = numberIndicesArray.find(
           (value) => {
-            value.coordinateList.some((coord) => coord.x === gearIndex.x && coord.y === gearIndex.y)
+            return value.coordinateList.some((coord) => coord.x === index.x && coord.y === index.y)
           })
         if (!!number) {
           for (const coordinate of number?.coordinateList) {
