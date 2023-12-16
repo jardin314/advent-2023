@@ -5,13 +5,17 @@ type MapRules = {
   top: number,
   shift: number
 }
+type Seed = {
+  initialValue: number,
+  range: number
+}
 
 async function main() {
   let total: number = 0
   const input: string = await fs.readFile(`${process.env.PATH_TO_ROOT}/5/input`, 'utf8')
   const inputArray: string[] = input.trim().split('\n')
   const seedString = inputArray[0]
-  const seedArray: string[] = seedString.slice(seedString.indexOf(':') + 1).trim().split(' ')
+  const seeds: Array<Seed> = getSeedFromInputString(seedString)
   const locations: number[] = []
   const seedToSoil: Array<MapRules>  = []
   const soilToFertilizer: Array<MapRules> = []
@@ -44,23 +48,24 @@ async function main() {
     }
   }
 
+  let smallestLocation = -1
 
-  for (let seed of seedArray) {
-    const seedNumber = Number(seed)
-    const soil = mapKey(seedNumber, seedToSoil)
-    const fertilizer = mapKey(soil, soilToFertilizer)
-    const water = mapKey(fertilizer, fertilizerToWater)
-    const light = mapKey(water, waterToLight)
-    const temperature = mapKey(light, lightToTemperature)
-    const humidity = mapKey(temperature, temperatureToHumidity)
-    const location = mapKey(humidity, humidityToLocation)
-    console.log(`soil: ${soil}, fertilizer: ${fertilizer}, water: ${water}, light: ${light}, temperature, ${temperature}, humidity: ${humidity}, location: ${location}`)
-    locations.push(location)
+  for (let seed of seeds) {
+    for (let i = 0; i < seed.range; i++) {
+      const soil = mapKey(seed.initialValue + i, seedToSoil)
+      const fertilizer = mapKey(soil, soilToFertilizer)
+      const water = mapKey(fertilizer, fertilizerToWater)
+      const light = mapKey(water, waterToLight)
+      const temperature = mapKey(light, lightToTemperature)
+      const humidity = mapKey(temperature, temperatureToHumidity)
+      const location = mapKey(humidity, humidityToLocation)
+      if (location < smallestLocation || smallestLocation === -1) {
+        smallestLocation = location
+      }
+    }
   }
 
-  let smallestLocation: number = Math.min(...locations)
   return smallestLocation
-  
 }
 
 function setRules(input: string, rules: Array<MapRules>) {
@@ -84,6 +89,14 @@ function mapKey(input: number, rules: Array<MapRules>) {
   return input
 }
 
+function getSeedFromInputString(input: string): Array<Seed> {
+  const inputArray = input.slice(input.indexOf(':') + 1).trim().split(' ')
+  const returnValue: Array<Seed> = []
+  for (let i=0; i < inputArray.length; i+=2) {
+    returnValue.push({initialValue: Number(inputArray[i]), range: Number(inputArray[i + 1])})
+  }
+  return returnValue
+}
 
 
 main().then(console.log).catch(console.error)
