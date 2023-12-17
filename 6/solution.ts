@@ -5,23 +5,16 @@ import 'dotenv/config'
 async function main() {
   const input: string = await fs.readFile(`${process.env.PATH_TO_ROOT}/6/input`, 'utf8')
   const inputArray: string[] = input.trim().split('\n')
-  const times: RegExpMatchArray|null = inputArray[0].match(/\d+/g)
-  const distances: RegExpMatchArray|null = inputArray[1].match(/\d+/g)
+  const time: string|undefined = inputArray[0].match(/\d+/g)?.join('')
+  const distance: string|undefined = inputArray[1].match(/\d+/g)?.join('')
 
-  if (times === null || distances === null) {
-    throw Error('No matches')
-  }
-  if (times.length !== distances.length) {
-    throw Error('Times and distances don\'t match')
+  if (time === undefined || distance === undefined) {
+    throw Error('String parsing error')
   }
 
-  const waysToWinPerRace: number[] = []
-  for (let i = 0; i < times.length; i++) {
-    const numberOfWaysToWin: number = getWins(Number(times[i]), Number(distances[i]))
-    waysToWinPerRace.push(numberOfWaysToWin)
-  }
+  const numberOfWaysToWin: number = getWins(Number(time), Number(distance))
 
-  return waysToWinPerRace.reduce((accumulator, currentValue) => {return accumulator * currentValue}, 1)
+  return numberOfWaysToWin
 }
 
 function getWins(time: number, distanceToBeat: number): number {
