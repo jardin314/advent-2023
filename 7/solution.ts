@@ -7,7 +7,7 @@ type HandInfo = {
   bid: number
 }
 const faceCardRankings: Map<string, number> = new Map()
-faceCardRankings.set('T', 10).set('J', 11).set('Q', 12).set('K', 13).set('A', 14)
+faceCardRankings.set('T', 10).set('J', 0).set('Q', 11).set('K', 12).set('A', 13)
 
 async function main() {
   const input: string = await fs.readFile(`${process.env.PATH_TO_ROOT}/7/input`, 'utf8')
@@ -22,35 +22,18 @@ async function main() {
   for (let i = hands.length-1; i >= 0; i--) {
     for (let j = 0; j < i; j++) {
       if (hands[j].rank > hands[j+1].rank || (hands[j].rank === hands[j+1].rank && compareIdenticalRanks(hands[j].hand, hands[j+1].hand) === 1)) {
-        // console.log(`Moving up ${hands[j].hand} ahead of ${hands[j + 1].hand}`)
         const hold = hands[j + 1]
         hands[j + 1] = hands[j]
         hands[j] = hold
       }
     }
   }
-  hands.forEach((hand, index) => {console.log(`Hand: ${hand.hand}, Rank: ${index + 1}, HandValue: ${hand.rank}`)})
   const total: number = hands.reduce((accumulator, currentValue, index) => {return accumulator + currentValue.bid * (index + 1)}, 0)
   return total
 }
 
 function getRank(hand: string) {
-  const numberOfEachCard: any = {
-    1: 0,
-    2: 0,
-    3: 0,
-    4: 0,
-    5: 0,
-    6: 0,
-    7: 0,
-    8: 0,
-    9: 0,
-    10: 0,
-    11: 0,
-    12: 0,
-    13: 0,
-    14: 0
-  }
+  const numberOfEachCard: number[] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
   for (let i = 0; i < hand.length; i++) {
     const card: string= hand[i]
@@ -61,19 +44,27 @@ function getRank(hand: string) {
     numberOfEachCard[cardValue]++
   }
 
-  const matches: number[] = Object.values(numberOfEachCard)
-  if (matches.includes(5)) {
+  if (numberOfEachCard[0] > 0) {
+    const mostDuplicates: number = numberOfEachCard.slice(1).reduce((previousValue, currentValue, index) => {
+      return currentValue > previousValue ? currentValue : previousValue 
+    }, 0)
+    const cardWithMostDuplicates: number = numberOfEachCard.lastIndexOf(mostDuplicates)
+    numberOfEachCard[cardWithMostDuplicates] += numberOfEachCard[0]
+    numberOfEachCard[0] = 0
+  }
+
+  if (numberOfEachCard.includes(5)) {
     return 7
-  } else if (matches.includes(4)) {
+  } else if (numberOfEachCard.includes(4)) {
     return 6
-  } else if (matches.includes(3)) {
-    if (matches.includes(2)) {
+  } else if (numberOfEachCard.includes(3)) {
+    if (numberOfEachCard.includes(2)) {
       return 5
     } else {
       return 4
     }
-  } else if (matches.includes(2)) {
-    if (matches.indexOf(2) !== matches.lastIndexOf(2)) {
+  } else if (numberOfEachCard.includes(2)) {
+    if (numberOfEachCard.indexOf(2) !== numberOfEachCard.lastIndexOf(2)) {
       return 3
     } else {
       return 2
