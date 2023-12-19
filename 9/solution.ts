@@ -8,8 +8,8 @@ async function main() {
   let sumOfAllNextValues: number = 0
   for (let line of inputArray) {
     const sequence: number[] = line.split(' ').map((value) => Number(value))
-    const nextInSequence = getNextValue(line, sequence)   
-    sumOfAllNextValues += nextInSequence
+    const previousInSequence = getNextValue(line, sequence)   
+    sumOfAllNextValues += previousInSequence
   }
   return sumOfAllNextValues
 }
@@ -30,17 +30,17 @@ function getNextValue(line: string, sequence: number[]) {
     currentIndex++
   }
   for (let i = sequences.length-2; i >=0; i--) {
-    const valueToAdd = sequences[i+1].at(-1) ?? NaN
-    const currentLastInSequence = sequences[i].at(-1) ?? NaN
-    const nextInSequence = currentLastInSequence + valueToAdd
-    if (isNaN(nextInSequence)) {
+    const valueToSubtract = sequences[i+1][0] ?? NaN
+    const currentFirstInSequence = sequences[i][0] ?? NaN
+    const newFirstInSequence = currentFirstInSequence - valueToSubtract
+    if (isNaN(newFirstInSequence)) {
       throw Error('Number in sequence is not a number')
     }
-    sequences[i].push(nextInSequence)
+    sequences[i].unshift(newFirstInSequence)
   }
-  const nextInFirstSequence = sequences[0].at(-1) ?? NaN
+  const newFirstInFirstSequence = sequences[0][0] ?? NaN
 
-  return nextInFirstSequence
+  return newFirstInFirstSequence
 }
 
 
