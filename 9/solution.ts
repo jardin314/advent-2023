@@ -44,6 +44,4 @@ function getNextValue(line: string, sequence: number[]) {
 }
 
 
-
-
 main().then(console.log).catch(console.error)
