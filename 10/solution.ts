@@ -3,7 +3,9 @@ import 'dotenv/config'
 
 type Pipe = '|'|'-'|'L'|'J'|'F'|'7'|'S'
 type Connections = {north: boolean, south: boolean, east: boolean, west: boolean}
-type Coordinates = {x: number, y: number, cameFrom?: 'north'|'south'|'east'|'west'}
+type Coordinates = {x: number, y: number}
+type CoordinateInfo = {node: string, inLoop?: boolean}
+type CoordinateGrid = Array<Array<CoordinateInfo>>
 const pipeConnectionMap: Map<Pipe, Connections> = new Map()
 pipeConnectionMap
 .set('|', {north: true, south: true, east: false, west: false})
@@ -17,79 +19,95 @@ pipeConnectionMap
 async function main() {
   const input: string = await fs.readFile(`${process.env.PATH_TO_ROOT}/10/input`, 'utf8')
   const inputArray: string[] = input.trim().split('\n')
-  const startingY: number = inputArray.findIndex((row) => row.includes('S'))
-  const startingX: number = inputArray[startingY].indexOf('S')
-  const startingCoordinates: Coordinates = {x: startingX, y: startingY}
-  let currentCoordinates: Array<Coordinates> = getConnections([startingCoordinates])
-  const loop: Array<Coordinates> = []
-  currentCoordinates.forEach((coordinate) => loop.push(coordinate))
+  const coordinateGrid: CoordinateGrid = []
+  let startingCoordinates: Coordinates = {x: -1, y: -1}
+  createCoordinateGrid()
+  let currentCoordinates: Coordinates = {x: startingCoordinates.x, y: startingCoordinates.y - 1} 
+  let previousCoordinates: Coordinates = {x: startingCoordinates.x, y: startingCoordinates.y}
+  const sideA: Array<Coordinates> = []
+  const sideB: Array<Coordinates> = []
 
-  while (currentCoordinates[0].x !== currentCoordinates[1].x || currentCoordinates[0].y !== currentCoordinates[1].y) {
-    currentCoordinates = getConnections(currentCoordinates)
-    currentCoordinates.forEach((coordinate) => loop.push(coordinate))
-  }
-
-  return countTilesInLoop()
-
-
-
-  function getConnections(coordinates: Array<Coordinates>): Array<Coordinates> {
-    const returnArray: Array<Coordinates> = []
-  
-    for (let coordinate of coordinates) {
-      returnArray.push(getNewCoordinates(coordinate))
-    }
-    if (returnArray.length !== 2) {
-      console.log(returnArray)
-      throw Error('Connections not counted properly')
-    }
-    return returnArray
-  }
-
-  function getNewCoordinates(coordinate: Coordinates): Coordinates {
-   const pipe: Pipe = inputArray[coordinate.y][coordinate.x] as Pipe
-    if (pipe === undefined) {
-      throw Error(`No pipe found at ${coordinate.x}${coordinate.y}`)
-    }
-    const connections: Connections = pipeConnectionMap.get(pipe) ?? {'north': false, 'south': false, 'east': false, 'west': false}
-    if (!connections) {
-      throw Error('No connections found')
-    }
-    for (let direction in connections) {
-      if (!connections[direction as keyof typeof connections] || direction === coordinate.cameFrom) {
-        continue
-      }
-        switch (direction) {
-          case 'north': return {x: coordinate.x, y: coordinate.y - 1, cameFrom: 'south'}
-          break
-          case 'south': return {x: coordinate.x, y: coordinate.y + 1, cameFrom: 'north'}
-          break
-          case 'east': return {x: coordinate.x + 1, y: coordinate.y, cameFrom: 'west'}
-          break
-          case 'west': return {x: coordinate.x - 1, y: coordinate.y, cameFrom: 'east'}
-          break
+  displayGrid()
+  while (currentCoordinates.x !== startingCoordinates.x || currentCoordinates.y !== startingCoordinates.y) {
+    const {x, y} = currentCoordinates
+    const currentNode: string = coordinateGrid[y][x].node
+    switch (currentNode) {
+      case '|': {
+        if (y - 1 === previousCoordinates.y) {
+          currentCoordinates.y++
+        } else {
+          currentCoordinates.y--
         }
-    } 
-    throw Error('This should have been impossible')
+      }
+      case '-': {
+        if (x - 1 === previousCoordinates.x) {
+          currentCoordinates.x++
+        } else {
+            currentCoordinates.x--
+          }
+      }
+      case 'J': {
+        if (x - 1 === previousCoordinates.x) {
+          currentCoordinates.y--
+        } else {
+            currentCoordinates.x--
+          }
+      }
+      case 'F': {
+        if (x + 1 === previousCoordinates.x) {
+          currentCoordinates.y++
+        } else {
+            currentCoordinates.x++
+          }
+      }
+      case 'L': {
+        if (x + 1 === previousCoordinates.x) {
+          currentCoordinates.y--
+        } else {
+            currentCoordinates.x++
+          }
+      }
+      case '7': {
+        if (x - 1 === previousCoordinates.x) {
+          currentCoordinates.y++
+        } else {
+            currentCoordinates.x--
+          }
+      }
+    }
+    coordinateGrid[currentCoordinates.y][currentCoordinates.x].inLoop = true
   }
+  displayGrid()
 
-  /*
-  function countTilesInLoop(): number {
-    let counter: number = 0
+  return 0
+
+  function createCoordinateGrid() {
     for (let y = 0; y < inputArray.length; y++) {
-      for (let x = 0; x < line.length; x++) {
-        if (checkInLoop({x, y}) {
-          counter++
+      coordinateGrid.push([])
+      for (let x = 0; x < inputArray[y].length; x++) {
+        coordinateGrid[y].push({node: inputArray[y][x], inLoop: false})
+        const node = coordinateGrid[y][x].node
+        if (node === 'S') {
+          coordinateGrid[y][x].inLoop = true
+          startingCoordinates = {x, y}
         }
       }
     }
-    return counter
   }
-  function checkInLoop(coordinates: Coordinates): boolean {
-    let inLoop: boolean = false
-    
+  function displayGrid() {
+    let str = ''
+    for (let y = 0; y < coordinateGrid.length; y++) {
+      for (let x = 0; x < coordinateGrid[y].length; x++) {
+        if (coordinateGrid[y][x].inLoop) {
+          str += '+'
+        } else {
+          str += coordinateGrid[y][x].node
+        }
+      }
+      str += '\n'
+    }
+    console.log(str)
   }
-  */
 }
 
 
